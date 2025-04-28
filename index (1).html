@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de TFG Corrigida</title>
+</head>
+<body>
+    <h1>Calculadora de TFG Corrigida pela Superfície Corporal</h1>
+
+    <form id="formulario">
+        <label>Idade (anos): <input type="number" id="idade" required></label><br><br>
+        <label>Sexo:
+            <select id="sexo">
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+            </select>
+        </label><br><br>
+        <label>Creatinina (mg/dL): <input type="number" step="0.01" id="creatinina" required></label><br><br>
+        <label>Peso (kg): <input type="number" step="0.1" id="peso" required></label><br><br>
+        <label>Altura (cm): <input type="number" step="0.1" id="altura" required></label><br><br>
+
+        <button type="button" onclick="calcularTFG()">Calcular</button>
+    </form>
+
+    <h2>Resultados:</h2>
+    <div id="resultados"></div>
+
+    <script>
+        function calcularTFG() {
+            // Captura dos dados
+            const idade = parseFloat(document.getElementById('idade').value);
+            const sexo = document.getElementById('sexo').value;
+            const creatinina = parseFloat(document.getElementById('creatinina').value);
+            const peso = parseFloat(document.getElementById('peso').value);
+            const altura = parseFloat(document.getElementById('altura').value);
+
+            // CKD-EPI 2021 (sem uso de raça)
+            let k = (sexo === 'feminino') ? 0.7 : 0.9;
+            let alpha = (sexo === 'feminino') ? -0.241 : -0.302;
+            let fatorSexo = (sexo === 'feminino') ? 1.012 : 1;
+
+            const minCreat = Math.min(creatinina / k, 1);
+            const maxCreat = Math.max(creatinina / k, 1);
+
+            let tfgIndexada = 142 * Math.pow(minCreat, alpha) * Math.pow(maxCreat, -1.200) * Math.pow(0.9938, idade) * fatorSexo;
+            tfgIndexada = tfgIndexada.toFixed(1);
+
+            // Superfície corporal (fórmula de Du Bois)
+            const superficieCorporal = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
+
+            // Correção da TFG pela SC real
+            let tfgCorrigida = (tfgIndexada * superficieCorporal / 1.73).toFixed(1);
+
+            // Exibir os resultados
+            document.getElementById('resultados').innerHTML = `
+                <p><strong>TFG estimada (indexada):</strong> ${tfgIndexada} mL/min/1,73m²</p>
+                <p><strong>Superfície Corporal:</strong> ${superficieCorporal.toFixed(2)} m²</p>
+                <p><strong>TFG corrigida pela SC real:</strong> ${tfgCorrigida} mL/min</p>
+            `;
+        }
+    </script>
+</body>
+</html>
