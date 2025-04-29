@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de TFG - CKD-EPI 2021</title>
+    <meta name="description" content="Calculadora de TFG baseada na fórmula CKD-EPI 2021. Estime a taxa de filtração glomerular usando creatinina e opcionalmente cistatina C, com ajuste pela superfície corporal. Ferramenta prática para nefrologistas e clínicos.">
+    <meta name="keywords" content="calculadora nefrológica, calculadora renal, cálculo taxa de filtração glomerular, cálculo TFG, CKD-EPI, cálculo CKD, função renal, filtração glomerular estimada, estimativa TFG creatinina, cistatina C função renal">
+    <meta name="author" content="Lucas Goldin">
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            background-color: #f0f0f0;
+            padding: 40px;
+            max-width: 600px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        p.subtitle {
+            text-align: center;
+            font-style: italic;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 15px;
+        }
+        input, select {
+            padding: 6px;
+            width: 100%;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        #resultados {
+            margin-top: 30px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DGW5G1L0XL"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DGW5G1L0XL');
+    </script>
+</head>
+<body>
+    <h1>Calculadora de TFG (CKD-EPI 2021)</h1>
+    <p class="subtitle">Baseada na creatinina e opcionalmente na cistatina C, com correção pela superfície corporal.</p>
+
+    <form id="formulario">
+        <label>Idade (anos):
+            <input type="number" id="idade" required>
+        </label>
+        <label>Sexo:
+            <select id="sexo">
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+            </select>
+        </label>
+        <label>Creatinina (mg/dL):
+            <input type="number" step="0.01" id="creatinina" required>
+        </label>
+        <label>Cistatina C (mg/L) <strong>(opcional)</strong>:
+            <input type="number" step="0.01" id="cistatina">
+        </label>
+        <label>Peso (kg):
+            <input type="number" step="0.1" id="peso" required>
+        </label>
+        <label>Altura (cm):
+            <input type="number" step="0.1" id="altura" required>
+        </label>
+        <button type="button" onclick="calcularTFG()">Calcular</button>
+    </form>
+
+    <div id="resultados"></div>
+
+    <script>
+        function calcularTFG() {
+            const idade = parseFloat(document.getElementById('idade').value);
+            const sexo = document.getElementById('sexo').value;
+            const creatinina = parseFloat(document.getElementById('creatinina').value);
+            const cistatina = parseFloat(document.getElementById('cistatina').value);
+            const peso = parseFloat(document.getElementById('peso').value);
+            const altura = parseFloat(document.getElementById('altura').value);
+
+            let k = (sexo === 'feminino') ? 0.7 : 0.9;
+            let alpha = (sexo === 'feminino') ? -0.241 : -0.302;
+            let fatorSexo = (sexo === 'feminino') ? 1.012 : 1;
+
+            let tfgIndexada = 0;
+
+            if (!isNaN(cistatina)) {
+                const minScr = Math.min(creatinina / k, 1);
+                const maxScr = Math.max(creatinina / k, 1);
+                const minScys = Math.min(cistatina / 0.8, 1);
+                const maxScys = Math.max(cistatina / 0.8, 1);
+                const sexoFator = (sexo === 'feminino') ? 1.08 : 1;
+                tfgIndexada = 135 * Math.pow(minScr, alpha) * Math.pow(maxScr, -0.601)
+                    * Math.pow(minScys, -0.375) * Math.pow(maxScys, -0.711)
+                    * Math.pow(0.995, idade) * sexoFator;
+            } else {
+                const minCreat = Math.min(creatinina / k, 1);
+                const maxCreat = Math.max(creatinina / k, 1);
+                tfgIndexada = 142 * Math.pow(minCreat, alpha) * Math.pow(maxCreat, -1.200)
+                    * Math.pow(0.9938, idade) * fatorSexo;
+            }
+
+            const superficieCorporal = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
+            const tfgCorrigida = tfgIndexada * superficieCorporal / 1.73;
+
+            document.getElementById('resultados').innerHTML = `
+                <h2>Resultado</h2>
+                <p><strong>TFG estimada (indexada):</strong> ${tfgIndexada.toFixed(1)} mL/min/1,73m²</p>
+                <p><strong>Superfície Corporal:</strong> ${superficieCorporal.toFixed(2)} m²</p>
+                <p><strong>TFG corrigida pela SC real:</strong> ${tfgCorrigida.toFixed(1)} mL/min</p>
+            `;
+        }
+    </script>
+</body>
+</html>
